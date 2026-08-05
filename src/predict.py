@@ -6,7 +6,7 @@ model = load(Path(__file__).parents[1]/"model"/"student_model.pkl")
 
 sample = pd.DataFrame([{
     "StudyHours":6,
-    "Attendance":82,
+    "Attendance":72.6,
     "Assignments":7
 }])
 

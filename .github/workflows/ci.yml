@@ -26,7 +26,6 @@ jobs:
       - name: Train model
         run: |
           python src/train.py
-          python -c "print('Model training completed successfully.')"
 
       - name: Run tests
         run: python -m unittest discover -s tests -p 'test_*.py'

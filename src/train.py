@@ -13,3 +13,5 @@ model.fit(X,y)
 out = Path(__file__).parents[1]/"model"/"student_model.pkl"
 dump(model,out)
 print(f"Model saved to {out}")
+
+print("Model training completed successfully.")

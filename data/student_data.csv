@@ -1,4 +1,5 @@
 StudyHours,Attendance,Assignments,Pass
+1,50,2,0
 2,60,3,0
 3,65,4,0
 4,70,5,0
@@ -7,4 +8,3 @@ StudyHours,Attendance,Assignments,Pass
 7,85,8,1
 8,90,9,1
 9,95,10,1
-1,50,2,0

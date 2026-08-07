@@ -1,0 +1,84 @@
+name: CI - Test & Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.13']
+      fail-fast: false
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python -c "import sys; print(f'Python {sys.version}')"
+
+      - name: Create virtual environment (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+
+      - name: Create virtual environment (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m venv .venv
+          .venv\Scripts\activate.bat
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+        shell: cmd
+
+      - name: Train model (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          python src/train.py
+
+      - name: Train model (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\activate.bat
+          python src/train.py
+        shell: cmd
+
+      - name: Run smoke tests (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/test_smoke.py -v
+
+      - name: Run smoke tests (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\activate.bat
+          python -m pytest tests/test_smoke.py -v
+        shell: cmd
+
+      - name: Test predictions (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          source .venv/bin/activate
+          python src/predict.py
+
+      - name: Test predictions (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\activate.bat
+          python src/predict.py
+        shell: cmd

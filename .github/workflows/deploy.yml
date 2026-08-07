@@ -1,0 +1,62 @@
+name: CD - Deploy Model
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["CI - Test & Build"]
+    types:
+      - completed
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Create virtual environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Train production model
+        run: |
+          source .venv/bin/activate
+          python src/train.py
+
+      - name: Run final validation tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest tests/test_smoke.py -v
+
+      - name: Generate model report
+        run: |
+          source .venv/bin/activate
+          python src/predict.py
+          echo "Model deployed successfully"
+
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: model/
+          retention-days: 30
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Model Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** main" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** ✅ Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifacts:** Model files uploaded" >> $GITHUB_STEP_SUMMARY
